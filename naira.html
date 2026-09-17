@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atur Gaji - Dashboard Keuangan</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  h1 { font-size: 1.8rem; color: #38bdf8; }
+  h1 span { color: #e2e8f0; font-weight: 300; }
+
+  /* Cards */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid #38bdf8;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+  }
+  .card:hover { transform: translateY(-4px); }
+  .card h3 { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .card .value { font-size: 1.6rem; font-weight: 700; color: #f1f5f9; }
+  .card.green { border-left-color: #22c55e; }
+  .card.red { border-left-color: #ef4444; }
+  .card.yellow { border-left-color: #eab308; }
+
+  /* Input Section */
+  .section {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .section h2 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .input-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  input, select {
+    flex: 1;
+    min-width: 150px;
+    padding: 12px 14px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+  input:focus, select:focus { border-color: #38bdf8; }
+
+  button {
+    padding: 12px 20px;
+    background: #38bdf8;
+    color: #0f172a;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  button:hover { background: #0ea5e9; transform: scale(1.03); }
+  button.danger { background: #ef4444; color: white; padding: 6px 12px; font-size: 0.85rem; }
+  button.danger:hover { background: #dc2626; }
+  button.plus { background: #22c55e; color: white; padding: 6px 12px; font-size: 0.85rem; }
+  button.plus:hover { background: #16a34a; }
+
+  /* List Kebutuhan */
+  .list { display: flex; flex-direction: column; gap: 12px; }
+  .item {
+    background: #0f172a;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    transition: border 0.2s;
+  }
+  .item:hover { border-color: #38bdf8; }
+  .item-info { flex: 1; min-width: 200px; }
+  .item-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: #334155;
+    color: #94a3b8;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  .item-detail { font-size: 0.85rem; color: #94a3b8; }
+  .item-detail strong { color: #38bdf8; }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #334155;
+    border-radius: 4px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  .progress-fill.ok { background: linear-gradient(90deg, #22c55e, #4ade80); }
+  .progress-fill.warn { background: linear-gradient(90deg, #eab308, #facc15); }
+  .progress-fill.over { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+  .item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .item-actions input {
+    width: 110px;
+    min-width: 90px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
+    font-style: italic;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #22c55e;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: #ef4444; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.3rem; }
+    .card .value { font-size: 1.3rem; }
+    .item-actions { width: 100%; }
+    .item-actions input { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>💰 Atur <span>Gaji</span></h1>
+    <div id="dateInfo" style="color:#94a3b8; font-size:0.9rem;"></div>
+  </header>
+
+  <!-- Summary Cards -->
+  <div class="cards">
+    <div class="card">
+      <h3>Total Gaji</h3>
+      <div class="value" id="totalGaji">Rp 0</div>
+    </div>
+    <div class="card yellow">
+      <h3>Total Dialokasikan</h3>
+      <div class="value" id="totalAlokasi">Rp 0</div>
+    </div>
+    <div class="card green">
+      <h3>Sisa Gaji</h3>
+      <div class="value" id="sisaGaji">Rp 0</div>
+    </div>
+    <div class="card red">
+      <h3>Terpakai</h3>
+      <div class="value" id="totalTerpakai">Rp 0</div>
+    </div>
+  </div>
+
+  <!-- Input Gaji -->
+  <div class="section">
+    <h2>💵 Masukkan Gaji Bulanan</h2>
+    <div class="input-group">
+      <input type="number" id="inputGaji" placeholder="Contoh: 5000000" min="0">
+      <button onclick="setGaji()">Simpan Gaji</button>
+      <button onclick="resetAll()" style="background:#ef4444;color:white;">Reset Semua</button>
+    </div>
+  </div>
+
+  <!-- Tambah Kebutuhan -->
+  <div class="section">
+    <h2>➕ Tambah Kebutuhan</h2>
+    <div class="input-group">
+      <input type="text" id="namaKebutuhan" placeholder="Nama kebutuhan (cth: Makan)" maxlength="30">
+      <select id="kategoriKebutuhan">
+        <option value="Pokok">🍚 Pokok</option>
+        <option value="Transport">🚌 Transport</option>
+        <option value="Tagihan">📄 Tagihan</option>
+        <option value="Hiburan">🎮 Hiburan</option>
+        <option value="Tabungan">🏦 Tabungan</option>
+        <option value="Lainnya">📦 Lainnya</option>
+      </select>
+      <input type="number" id="alokasiKebutuhan" placeholder="Alokasi (Rp)" min="0">
+      <button onclick="tambahKebutuhan()">Tambah</button>
+    </div>
+  </div>
+
+  <!-- Daftar Kebutuhan -->
+  <div class="section">
+    <h2>📋 Daftar Kebutuhan</h2>
+    <div class="list" id="listKebutuhan"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ===== State =====
+  let state = {
+    gaji: 0,
+    kebutuhan: []
+  };
+
+  // ===== Load & Save =====
+  function loadState() {
+    const saved = localStorage.getItem('aturGajiData');
+    if (saved) {
+      try { state = JSON.parse(saved); } catch(e) {}
+    }
+    document.getElementById('inputGaji').value = state.gaji || '';
+  }
+
+  function saveState() {
+    localStorage.setItem('aturGajiData', JSON.stringify(state));
+  }
+
+  // ===== Format Rupiah =====
+  function rupiah(n) {
+    return 'Rp ' + (Number(n) || 0).toLocaleString('id-ID');
+  }
+
+  // ===== Toast Notification =====
+  let toastTimer;
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' error' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.className = 'toast', 2500);
+  }
+
+  // ===== Set Gaji =====
+  function setGaji() {
+    const val = parseFloat(document.getElementById('inputGaji').value) || 0;
+    if (val < 0) return showToast('Gaji tidak boleh negatif', true);
+    state.gaji = val;
+    saveState();
+    render();
+    showToast('✅ Gaji berhasil disimpan');
+  }
+
+  // ===== Tambah Kebutuhan =====
+  function tambahKebutuhan() {
+    const nama = document.getElementById('namaKebutuhan').value.trim();
+    const kategori = document.getElementById('kategoriKebutuhan').value;
+    const alokasi = parseFloat(document.getElementById('alokasiKebutuhan').value) || 0;
+
+    if (!nama) return showToast('Nama kebutuhan wajib diisi', true);
+    if (alokasi <= 0) return showToast('Alokasi harus lebih dari 0', true);
+
+    state.kebutuhan.push({
+      id: Date.now(),
+      nama,
+      kategori,
+      alokasi,
+      terpakai: 0
+    });
+    saveState();
+
+    document.getElementById('namaKebutuhan').value = '';
+    document.getElementById('alokasiKebutuhan').value = '';
+    render();
+    showToast('✅ Kebutuhan ditambahkan');
+  }
+
+  // ===== Hapus Kebutuhan =====
+  function hapusKebutuhan(id) {
+    if (!confirm('Yakin hapus kebutuhan ini?')) return;
+    state.kebutuhan = state.kebutuhan.filter(k => k.id !== id);
+    saveState();
+    render();
+    showToast('🗑️ Kebutuhan dihapus');
+  }
+
+  // ===== Tambah Pemakaian =====
+  function tambahPemakaian(id, inputEl) {
+    const val = parseFloat(inputEl.value) || 0;
+    if (val <= 0) return showToast('Jumlah harus lebih dari 0', true);
+    const item = state.kebutuhan.find(k => k.id === id);
+    if (!item) return;
+
+    const sisa = item.alokasi - item.terpakai;
+    if (val > sisa) {
+      if (!confirm(`Jumlah melebihi alokasi! Sisa: ${rupiah(sisa)}. Tetap lanjutkan?`)) return;
+    }
+    item.terpakai += val;
+    saveState();
+    inputEl.value = '';
+    render();
+    showToast('💸 Pemakaian dicatat');
+  }
+
+  // ===== Reset Semua =====
+  function resetAll() {
+    if (!confirm('Reset semua data? Gaji dan kebutuhan akan dihapus.')) return;
+    state = { gaji: 0, kebutuhan: [] };
+    saveState();
+    document.getElementById('inputGaji').value = '';
+    render();
+    showToast('🔄 Data direset');
+  }
+
+  // ===== Render =====
+  function render() {
+    // Hitung total
+    const totalAlokasi = state.kebutuhan.reduce((s, k) => s + k.alokasi, 0);
+    const totalTerpakai = state.kebutuhan.reduce((s, k) => s + k.terpakai, 0);
+    const sisa = state.gaji - totalAlokasi;
+
+    document.getElementById('totalGaji').textContent = rupiah(state.gaji);
+    document.getElementById('totalAlokasi').textContent = rupiah(totalAlokasi);
+    document.getElementById('totalTerpakai').textContent = rupiah(totalTerpakai);
+    
+    const sisaEl = document.getElementById('sisaGaji');
+    sisaEl.textContent = rupiah(sisa);
+    sisaEl.style.color = sisa < 0 ? '#ef4444' : (sisa === 0 ? '#eab308' : '#22c55e');
+
+    // Render list
+    const listEl = document.getElementById('listKebutuhan');
+    if (state.kebutuhan.length === 0) {
+      listEl.innerHTML = '<div class="empty">Belum ada kebutuhan. Tambahin kebutuhan di atas ☝️</div>';
+      return;
+    }
+
+    listEl.innerHTML = state.kebutuhan.map(k => {
+      const persen = k.alokasi > 0 ? Math.min((k.terpakai / k.alokasi) * 100, 100) : 0;
+      const sisaItem = k.alokasi - k.terpakai;
+      let cls = 'ok';
+      if (persen >= 100) cls = 'over';
+      else if (persen >= 70) cls = 'warn';
+
+      return `
+        <div class="item">
+          <div class="item-info">
+            <div class="item-name">
+              ${escapeHtml(k.nama)}
+              <span class="badge">${k.kategori}</span>
+            </div>
+            <div class="item-detail">
+              Alokasi: <strong>${rupiah(k.alokasi)}</strong> • 
+              Terpakai: <strong>${rupiah(k.terpakai)}</strong> • 
+              Sisa: <strong style="color:${sisaItem < 0 ? '#ef4444' : '#22c55e'}">${rupiah(sisaItem)}</strong>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill ${cls}" style="width:${persen}%"></div>
+            </div>
+          </div>
+          <div class="item-actions">
+            <input type="number" placeholder="Jumlah pakai" min="0" id="input-${k.id}">
+            <button class="plus" onclick="tambahPemakaian(${k.id}, document.getElementById('input-${k.id}'))">+ Pakai</button>
+            <button class="danger" onclick="hapusKebutuhan(${k.id})">Hapus</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== Escape HTML =====
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, s => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[s]));
+  }
+
+  // ===== Enter key support =====
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (document.activeElement.id === 'inputGaji') setGaji();
+      else if (document.activeElement.id === 'namaKebutuhan' || document.activeElement.id === 'alokasiKebutuhan') tambahKebutuhan();
+    }
+  });
+
+  // ===== Tanggal =====
+  document.getElementById('dateInfo').textContent = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  // ===== Init =====
+  loadState();
+  render();
+</script>
+</body>
+</html>
